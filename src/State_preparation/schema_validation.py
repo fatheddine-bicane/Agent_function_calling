@@ -1,4 +1,5 @@
 from jsonschema import validate
+from Exceptions.StatePreparationExceptions import MultipleFunctionDefinitionException
 
 
 schema = {
@@ -13,6 +14,7 @@ schema = {
 }
 
 
-def validate_functions(functions: list[dict]) -> None:
-    for function in functions:
-        validate(instance=function, schema=schema)
+def validateFunctionsDefinitions(function: dict) -> None:
+    if isinstance(function, list):
+        raise MultipleFunctionDefinitionException()
+    validate(instance=function, schema=schema)
