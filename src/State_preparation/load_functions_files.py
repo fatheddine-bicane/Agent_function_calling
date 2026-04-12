@@ -7,7 +7,7 @@ from jsonschema import ValidationError
 
 
 def load_functions() -> list[dict]:
-    folder_path = Path("src/functions_deffinition")
+    folder_path = Path("src/Functions_deffinition")
 
     lowercase_json = folder_path.glob("*.json")
     uppercase_json = folder_path.glob("*.JSON")
