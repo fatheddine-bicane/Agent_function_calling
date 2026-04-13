@@ -2,11 +2,11 @@ from pathlib import Path
 import itertools
 import json
 from .schema_validation import validateFunctionsDefinitions
-from Exceptions.StatePreparationExceptions import MultipleFunctionDefinitionException
+from Exceptions.state_preparation_exceptions import MultipleFunctionDefinitionException
 from jsonschema import ValidationError
 
 
-def load_functions() -> list[dict]:
+def loadFunctions() -> list[dict]:
     folder_path = Path("src/Functions_deffinition")
 
     lowercase_json = folder_path.glob("*.json")
