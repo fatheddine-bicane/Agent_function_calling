@@ -24,7 +24,7 @@ class ContextWindow:
             self._index += 1
 
 
-    def tokenizeContextWindow(self, llm: Small_LLM_Model) -> Tensor:
+    def tokenizeContextWindow(self, llm: Small_LLM_Model) -> list[int]:
         functions: list[dict] = load_functions()
 
         initial_prompt = llm._tokenizer.apply_chat_template(
@@ -34,4 +34,4 @@ class ContextWindow:
             tokenize=False
         )
 
-        return llm.encode(cast(str, initial_prompt))
+        return llm.encode(cast(str, initial_prompt))[0].tolist()
