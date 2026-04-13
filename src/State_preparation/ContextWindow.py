@@ -1,7 +1,6 @@
 from llm_sdk import Small_LLM_Model
-from .load_functions_files import load_functions
+from .loadFunctions import loadFunctions
 from typing import cast, Any, Callable
-from torch import Tensor
 
 class ContextWindow:
     def __init__(self, *, messages_limit: int=50) -> None:
@@ -25,7 +24,7 @@ class ContextWindow:
 
 
     def tokenizeContextWindow(self, llm: Small_LLM_Model) -> list[int]:
-        functions: list[dict] = load_functions()
+        functions: list[dict] = loadFunctions()
 
         initial_prompt = llm._tokenizer.apply_chat_template(
             conversation=self._messages_lists,
