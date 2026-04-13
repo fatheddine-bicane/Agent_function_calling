@@ -1,5 +1,6 @@
 from llm_sdk import Small_LLM_Model
 from State_preparation.ContextWindow import ContextWindow
+from Exceptions.constrained_decoding_exceptions import ModelExceedTokensLimitException
 
 MAX_NEW_TOKENS = 300
 
@@ -34,5 +35,8 @@ def generateAnswer(
             pass
 
         generated_answer.append(expected_token)
+
+    else:
+        raise ModelExceedTokensLimitException(MAX_NEW_TOKENS)
 
     return llm.decode(generated_answer)
