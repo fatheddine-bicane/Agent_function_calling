@@ -9,6 +9,8 @@ class FiniteStateMachine:
         with open("./src/Constrained_decoding/fsm_schema.json") as f:
             schema = json.load(f)
             regex: str = self.__schemaToRegex(schema)
+            parsed_regex: Pattern = parse_pattern(regex)
+            self.fsm: FSM = parsed_regex.to_fsm()
 
         return
 
