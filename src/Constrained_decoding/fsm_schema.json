@@ -1,31 +1,28 @@
 {
-	"type": "array",
-	"items": {
-		"anyOf": [
-			{
-				"type": "object",
-				"properties": {
-					"name": { "const": "fn_add_numbers" },
-					"arguments": {
-						"type": "object",
-						"properties": {
-							"a": { "type": "number" },
-							"b": { "type": "number" }
-						}
-					}
-				},
-				"required": ["name", "arguments"]
-			},
-			{
-				"type": "object",
-				"properties": {
-					"name": { "const": "fn_greet"},
-					"arguments": {
-						"type": "object",
-						"properties": { "name": { "type": "string"} }
+	"anyOf": [
+		{
+			"type": "object",
+			"properties": {
+				"name": { "const": "fn_add_numbers" },
+				"arguments": {
+					"type": "object",
+					"properties": {
+						"a": { "type": "number" },
+						"b": { "type": "number" }
 					}
 				}
+			},
+			"required": ["name", "arguments"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"name": { "const": "fn_greet"},
+				"arguments": {
+					"type": "object",
+					"properties": { "name": { "type": "string"} }
+				}
 			}
-		]
-	}
+		}
+	]
 }
