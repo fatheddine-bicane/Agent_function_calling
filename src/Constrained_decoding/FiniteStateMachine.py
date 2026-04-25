@@ -18,7 +18,9 @@ class FiniteStateMachine:
 
 
     def __schemaToRegex(self, schema: dict) -> str:
-
+        """
+        Build a regular expression string out of a python dictionary.
+        """
         if "anyOf" in schema:
             elements: dict = schema.get("anyOf", {})
             options: list[str] = [self.__schemaToRegex(element) for element in elements]
@@ -62,7 +64,11 @@ class FiniteStateMachine:
 
 
     def __tokenFsmIndex(self, llm: Small_LLM_Model, fsm: FSM) -> dict:
-
+        """
+        Build a token level fsm by going through every token in the models vocabulary,
+        and try to move char by char checking if the token can walk an fsm state chain
+        starting from its first character till the end of a token.
+        """
         tokens_vocabulary: dict[str, int] = llm._tokenizer.get_vocab()
         fsm_map: dict[State, dict[TransitionKey, State]] = fsm.map
         symbol_mapping: dict[Union[str, _AnythingElseCls], TransitionKey] = fsm.alphabet._symbol_mapping
