@@ -1,15 +1,15 @@
 from llm_sdk import Small_LLM_Model
-from State_preparation.ContextWindow import ContextWindow
-from Exceptions.constrained_decoding_exceptions import ModelExceedTokensLimitException
-from Constrained_decoding.FiniteStateMachine import FiniteStateMachine
+from src.State_preparation.ContextWindow import ContextWindow
+from src.Exceptions.constrained_decoding_exceptions import ModelExceedTokensLimitException
+from src.Constrained_decoding.FiniteStateMachine import FiniteStateMachine
 from interegular.fsm import State
 import re
 import json
-from Constrained_decoding.tools import tools
+from src.Constrained_decoding.tools import tools
 from typing import Any
-from colorama import Fore, Back, Style
+from colorama import Style
 
-MAX_NEW_TOKENS = 600
+MAX_NEW_TOKENS = 1000
 SHOW_REASONING: bool = True
 
 def buildArrayOfDict(tools: str) -> list[dict]:
@@ -77,6 +77,9 @@ def generateToolsCallAsJson(
         for token_id in allowed_tokens_ids:
             mask[token_id] = logits_array[token_id]
         expected_token: int = mask.index(max(mask))
+
+        exp_str = llm._tokenizer.decode(expected_token)
+        print(exp_str, end="", flush=True)
 
         # break out of the loop is the curent state is the final state
         if expected_token == stop_token:
@@ -170,6 +173,9 @@ def generateAnswerAndUpdateContextWindow(
             # tokenize the new context window
             tokens_ids = context_window.tokenizeContextWindow(llm)
             generated_answer = []
+
+            # reset the token limit count
+            _ = 0
             continue
 
         tokens_ids.append(expected_token)
