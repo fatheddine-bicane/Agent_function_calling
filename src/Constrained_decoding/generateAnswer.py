@@ -3,13 +3,45 @@ from State_preparation.ContextWindow import ContextWindow
 from Exceptions.constrained_decoding_exceptions import ModelExceedTokensLimitException
 from Constrained_decoding.FiniteStateMachine import FiniteStateMachine
 from interegular.fsm import State
+import re
+import json
+from Constrained_decoding.tools import tools
 from typing import Any
 
 MAX_NEW_TOKENS = 600
 
+def buildArrayOfDict(tools: str) -> list[dict]:
+    """
+    Build a list of dictionary out a provided json objects wrapped in
+    '<tool_call></tool_call>' XML tags by matching them with a regular
+    expression.
+    """
+    pattern: str = r'<tool_call>(.*?)</tool_call>'
+    raw_jsons_strings: list[Any] = re.findall(pattern, tools, flags=re.DOTALL)
+
+    tools_dict_list: list[dict] = []
+    for raw_json_string in raw_jsons_strings:
+        try:
+            json_dictionary: dict = json.loads(raw_json_string)
+            tools_dict_list.append(json_dictionary)
+
+        except json.JSONDecodeError:
+            pass
+
+    return tools_dict_list
 
 
+def executeFunctions(tools_dict_list: list[dict]) -> list[Any]:
+    """
+    Loop through the given list of dictionarys executing the functions
+    and return the results.
+    """
+    functions_results: list[Any] = []
+    for tool in tools_dict_list:
+        result: Any = tools[tool["name"]](**tool["arguments"])
+        functions_results.append(result)
 
+    return functions_results
 
 
 def generateToolsCallAsJson(
