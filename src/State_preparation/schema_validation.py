@@ -1,5 +1,5 @@
 from jsonschema import validate
-from Exceptions.state_preparation_exceptions import MultipleFunctionDefinitionException
+from src.Exceptions.state_preparation_exceptions import MultipleFunctionDefinitionException
 
 
 schema = {

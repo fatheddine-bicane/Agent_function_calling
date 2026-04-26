@@ -2,8 +2,9 @@ from pathlib import Path
 import itertools
 import json
 from .schema_validation import validateFunctionsDefinitions
-from Exceptions.state_preparation_exceptions import MultipleFunctionDefinitionException
+from src.Exceptions.state_preparation_exceptions import MultipleFunctionDefinitionException
 from jsonschema import ValidationError
+from colorama import Fore
 
 
 def loadFunctions() -> list[dict]:
@@ -21,13 +22,13 @@ def loadFunctions() -> list[dict]:
                 validateFunctionsDefinitions(function_definition)
                 functions_definitions.append(function_definition)
             except json.JSONDecodeError as e:
-                print(f"Error: file \"{json_file}\"\n    JSON syntax: {e.msg}.")
-                print("    Warning: Function not loaded!")
+                print(Fore.RED + f"Error: file \"{json_file}\"\n    JSON syntax: {e.msg}.")
+                print(Fore.YELLOW  + "    Warning: Function not loaded!" + Fore.RESET)
             except ValidationError as e:
-                print(f"Error: file \"{json_file}\"\n    Schema : {e.message}.")
-                print("    Warning: Function not loaded!")
+                print(Fore.RED + f"Error: file \"{json_file}\"\n    Schema : {e.message}.")
+                print(Fore.YELLOW + "    Warning: Function not loaded!" + Fore.RESET)
             except MultipleFunctionDefinitionException as e:
-                print(f"Error: file \"{json_file}\"\n    Multiple function definitions : {e.message}.")
-                print("    Warning: Functions not loaded!")
+                print(Fore.RED + f"Error: file \"{json_file}\"\n    Multiple function definitions : {e.message}.")
+                print(Fore.YELLOW + "    Warning: Functions not loaded!" + Fore.RESET)
 
     return functions_definitions
