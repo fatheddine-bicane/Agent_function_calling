@@ -7,8 +7,10 @@ import re
 import json
 from Constrained_decoding.tools import tools
 from typing import Any
+from colorama import Fore, Back, Style
 
 MAX_NEW_TOKENS = 600
+SHOW_REASONING: bool = True
 
 def buildArrayOfDict(tools: str) -> list[dict]:
     """
@@ -70,17 +72,11 @@ def generateToolsCallAsJson(
         if current_state in fsm.fsm.finals:
             allowed_tokens_ids.append(llm._tokenizer.eos_token_id) #type: ignore
 
-        # debug
-        allowed_tokens_strings = [llm._tokenizer.decode(token) for token in allowed_tokens_ids]
-
         # ban every none allowed token and chose the one with the highest score
         mask: list[float] = [float('-inf')] * len(logits_array)
         for token_id in allowed_tokens_ids:
             mask[token_id] = logits_array[token_id]
         expected_token: int = mask.index(max(mask))
-
-        # debug
-        expected_token_string = llm._tokenizer.decode(expected_token, skip_special_tokens=False)
 
         # break out of the loop is the curent state is the final state
         if expected_token == stop_token:
@@ -93,9 +89,6 @@ def generateToolsCallAsJson(
         tokens_ids.append(expected_token)
         generated_answer.append(expected_token)
 
-        # debug
-        print(expected_token_string, end="", flush=True)
-
     else:
         raise ModelExceedTokensLimitException(MAX_NEW_TOKENS)
 
@@ -104,6 +97,30 @@ def generateToolsCallAsJson(
     tools_list: list[dict] = buildArrayOfDict(generated_answer_string) #type: ignore
     return tools_list
 
+
+
+def printToken(llm: Small_LLM_Model, token_id: int, model_is_reasoning: bool) -> bool:
+    """
+    Print given token, and apply terminal style for reasoning
+    """
+    if not SHOW_REASONING:
+        if token_id == START_OF_THINKING_TOKEN_ID:
+            return False
+        elif token_id == END_OF_THINKING_TOKEN_ID:
+            return True
+        elif not model_is_reasoning:
+            print(llm._tokenizer.decode(token_id), end="", flush=True)
+
+    elif SHOW_REASONING:
+        if token_id == START_OF_THINKING_TOKEN_ID:
+            print(Style.DIM, "Reasoning:", end="", flush=True)
+        elif token_id == END_OF_THINKING_TOKEN_ID:
+            print(Style.NORMAL, end="", flush=True)
+            return True
+        else:
+            print(llm._tokenizer.decode(token_id), end="", flush=True)
+
+    return model_is_reasoning
 
 
 def generateAnswerAndUpdateContextWindow(
@@ -118,26 +135,27 @@ def generateAnswerAndUpdateContextWindow(
     # transform context window text to token ids--numbers--
     tokens_ids: list[int] = context_window.tokenizeContextWindow(llm)
 
+    global START_OF_THINKING_TOKEN_ID
+    global END_OF_THINKING_TOKEN_ID 
+
     tool_call_token_id: int = llm._tokenizer.convert_tokens_to_ids("<tool_call>") #type: ignore
-    end_of_thinking_token_id: int = llm._tokenizer.convert_tokens_to_ids("</think>") #type: ignore
-    start_of_thinking_token_id: int = llm._tokenizer.convert_tokens_to_ids("<think>") #type: ignore
+    START_OF_THINKING_TOKEN_ID = llm._tokenizer.convert_tokens_to_ids("<think>") #type: ignore
+    END_OF_THINKING_TOKEN_ID = llm._tokenizer.convert_tokens_to_ids("</think>") #type: ignore
     stop_token: int = llm._tokenizer.eos_token_id #type: ignore
 
-    start_printing: bool = False
     generated_answer: list[int] = []
+    model_is_reasoning: bool = False
     for _ in range(MAX_NEW_TOKENS):
         # calculate logits score
         logits: list[float] = llm.get_logits_from_input_ids(tokens_ids)
         # chose the token with the highest score
         expected_token: int = logits.index(max(logits))
 
-        # debug
-        expected_token_string = llm._tokenizer.decode(expected_token)
-
         # if the llm decided the end of generation update the context window and break of the loop
         if expected_token == stop_token:
             generated_answer_string = llm.decode(generated_answer)
             context_window.appendMessage("assistant", generated_answer_string)
+            printToken(llm, llm._tokenizer.convert_tokens_to_ids('/n'), model_is_reasoning) #type: ignore
             break
 
         elif expected_token == tool_call_token_id:
@@ -157,15 +175,8 @@ def generateAnswerAndUpdateContextWindow(
         tokens_ids.append(expected_token)
         generated_answer.append(expected_token)
 
-        if start_printing:
-            print(expected_token_string, end="", flush=True)
-
-        # check if the model is in reasoning state then dont print generated tokens
-        if expected_token == end_of_thinking_token_id:
-            start_printing = True
-        elif expected_token == start_of_thinking_token_id:
-            start_printing = False
-
+        # print the token
+        model_is_reasoning = printToken(llm, expected_token, model_is_reasoning)
 
     else:
         raise ModelExceedTokensLimitException(MAX_NEW_TOKENS)
