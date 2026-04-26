@@ -1,42 +1,83 @@
 from llm_sdk import Small_LLM_Model
 from State_preparation.ContextWindow import ContextWindow
 from Exceptions.constrained_decoding_exceptions import ModelExceedTokensLimitException
+from Constrained_decoding.FiniteStateMachine import FiniteStateMachine
+from typing import Any
 
-MAX_NEW_TOKENS = 300
-
-def greedySearch(tokens_ids: list[int], llm: Small_LLM_Model) -> int:
-    logits = llm.get_logits_from_input_ids(tokens_ids)
-    expected_token = logits.index(max(logits))
-    tokens_ids.append(expected_token)
-
-    return expected_token
+MAX_NEW_TOKENS = 600
 
 
-def generateAnswer(
+
+
+
+
     llm: Small_LLM_Model,
     context_window: ContextWindow
 ) -> str:
     # tokenize context window
     tokens_ids = context_window.tokenizeContextWindow(llm)
 
-    tool_call_token_id = llm._tokenizer.convert_tokens_to_ids("<tool_call>")
-    end_of_thinking_token_id = llm._tokenizer.convert_tokens_to_ids("</think>")
-    stop_token = llm._tokenizer.eos_token_id
 
-    generated_answer = []
+def generateAnswerAndUpdateContextWindow(
+    llm: Small_LLM_Model,
+    context_window: ContextWindow,
+    fsm: FiniteStateMachine
+) -> None:
+    """
+    Generate answer, detect if there is a functions call, if so execute it and answer
+    based on the functions output, and update the context window.
+    """
+    # transform context window text to token ids--numbers--
+    tokens_ids: list[int] = context_window.tokenizeContextWindow(llm)
+
+    tool_call_token_id: int = llm._tokenizer.convert_tokens_to_ids("<tool_call>") #type: ignore
+    end_of_thinking_token_id: int = llm._tokenizer.convert_tokens_to_ids("</think>") #type: ignore
+    start_of_thinking_token_id: int = llm._tokenizer.convert_tokens_to_ids("<think>") #type: ignore
+    stop_token: int = llm._tokenizer.eos_token_id #type: ignore
+
+    start_printing: bool = False
+    generated_answer: list[int] = []
     for _ in range(MAX_NEW_TOKENS):
-        expected_token = greedySearch(tokens_ids, llm)
+        # calculate logits score
+        logits: list[float] = llm.get_logits_from_input_ids(tokens_ids)
+        # chose the token with the highest score
+        expected_token: int = logits.index(max(logits))
 
+        # debug
+        expected_token_string = llm._tokenizer.decode(expected_token)
+
+        # if the llm decided the end of generation update the context window and break of the loop
         if expected_token == stop_token:
+            generated_answer_string = llm.decode(generated_answer)
+            context_window.appendMessage("assistant", generated_answer_string)
             break
 
         elif expected_token == tool_call_token_id:
-            # call fms function takes {generated_answer, tokens_ids}
-            pass
+            #get the parsable tools list
+            tools_list: list[dict] = generateToolsCallAsJson(llm, fsm, tokens_ids, context_window, generated_answer)
 
+            # execute the tools and add the result to the history
+            results: list[Any] = executeFunctions(tools_list)
+            for result in results:
+                context_window.appendMessage(role="tool", content=str(result))
+
+            # tokenize the new context window
+            tokens_ids = context_window.tokenizeContextWindow(llm)
+            generated_answer = []
+            continue
+
+        tokens_ids.append(expected_token)
         generated_answer.append(expected_token)
+
+        if start_printing:
+            print(expected_token_string, end="", flush=True)
+
+        # check if the model is in reasoning state then dont print generated tokens
+        if expected_token == end_of_thinking_token_id:
+            start_printing = True
+        elif expected_token == start_of_thinking_token_id:
+            start_printing = False
+
 
     else:
         raise ModelExceedTokensLimitException(MAX_NEW_TOKENS)
-
-    return llm.decode(generated_answer)
