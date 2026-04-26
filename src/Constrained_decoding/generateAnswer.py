@@ -2,6 +2,7 @@ from llm_sdk import Small_LLM_Model
 from State_preparation.ContextWindow import ContextWindow
 from Exceptions.constrained_decoding_exceptions import ModelExceedTokensLimitException
 from Constrained_decoding.FiniteStateMachine import FiniteStateMachine
+from interegular.fsm import State
 from typing import Any
 
 MAX_NEW_TOKENS = 600
@@ -11,11 +12,66 @@ MAX_NEW_TOKENS = 600
 
 
 
+def generateToolsCallAsJson(
     llm: Small_LLM_Model,
-    context_window: ContextWindow
-) -> str:
-    # tokenize context window
-    tokens_ids = context_window.tokenizeContextWindow(llm)
+    fsm: FiniteStateMachine,
+    tokens_ids: list[int],
+    context_window: ContextWindow,
+    generated_answer: list[int]
+) -> list[dict]:
+    """
+    Generate a list of parsable dictionarys to execute the correct tools by 
+    guiding the models output token by token to avoid any chance of hallucination
+    using a pre compiled state machine for the available tools.
+    """
+    current_state: State = fsm.fsm.initial
+    # generated_answer: list[int] = []
+    stop_token: int = llm._tokenizer.eos_token_id #type: ignore
+
+    for _ in range(MAX_NEW_TOKENS):
+        # calculate logits score
+        logits_array: list[float] = llm.get_logits_from_input_ids(tokens_ids)
+        # retrieve the allowed tokens at the current state
+        allowed_tokens_ids: list[int] = list(fsm.token_fsm_index[current_state].keys())
+
+        # check if the current state can be an accept state, if so allow the end of generation token
+        if current_state in fsm.fsm.finals:
+            allowed_tokens_ids.append(llm._tokenizer.eos_token_id) #type: ignore
+
+        # debug
+        allowed_tokens_strings = [llm._tokenizer.decode(token) for token in allowed_tokens_ids]
+
+        # ban every none allowed token and chose the one with the highest score
+        mask: list[float] = [float('-inf')] * len(logits_array)
+        for token_id in allowed_tokens_ids:
+            mask[token_id] = logits_array[token_id]
+        expected_token: int = mask.index(max(mask))
+
+        # debug
+        expected_token_string = llm._tokenizer.decode(expected_token, skip_special_tokens=False)
+
+        # break out of the loop is the curent state is the final state
+        if expected_token == stop_token:
+            break
+
+        # update the current state after chosing the token with highest score
+        current_state = fsm.token_fsm_index[current_state].get(expected_token)
+
+        #append token to answer and 
+        tokens_ids.append(expected_token)
+        generated_answer.append(expected_token)
+
+        # debug
+        print(expected_token_string, end="", flush=True)
+
+    else:
+        raise ModelExceedTokensLimitException(MAX_NEW_TOKENS)
+
+    generated_answer_string: str = llm._tokenizer.decode(generated_answer, skip_special_tokens=False) #type: ignore
+    context_window.appendMessage(role="assistant", content=generated_answer_string)
+    tools_list: list[dict] = buildArrayOfDict(generated_answer_string) #type: ignore
+    return tools_list
+
 
 
 def generateAnswerAndUpdateContextWindow(
