@@ -13,6 +13,7 @@ name = "agent-function-calling"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "colorama" },
     { name = "interegular" },
     { name = "jsonschema" },
     { name = "llm-sdk" },
@@ -20,6 +21,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "colorama", specifier = ">=0.4.6" },
     { name = "interegular", specifier = ">=0.3.3" },
     { name = "jsonschema", specifier = ">=4.26.0" },
     { name = "llm-sdk", editable = "packages/llm_sdk" },
