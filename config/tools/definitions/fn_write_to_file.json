@@ -1,0 +1,19 @@
+{
+	"name": "fn_write_to_file",
+	"description": "Writes a given string of text to a specified local file path.",
+	"parameters": {
+		"file_path": {
+			"type": "string"
+		},
+		"content": {
+			"type": "string"
+		},
+		"append": {
+			"type": "boolean",
+			"description": "Set to true to append to the file, or false to overwrite it."
+		}
+	},
+	"return": {
+		"type": "boolean"
+	}
+}

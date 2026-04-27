@@ -1,0 +1,74 @@
+{
+	"anyOf": [
+		{
+			"type": "object",
+			"properties": {
+				"name": { "const": "fn_extract_webpage_content"},
+				"arguments": {
+					"type": "object",
+					"properties": {
+						"url": { "type": "string" }
+					}
+
+				}
+			},
+			"required": ["name", "arguments"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"name": { "const": "fn_get_current_time"},
+				"arguments": {
+					"type": "object",
+					"properties": {
+						"timezone": { "type": "string" }
+					}
+				}
+			},
+			"required": ["name", "arguments"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"name": { "const": "fn_get_internet_snippet"},
+				"arguments": {
+					"type": "object",
+					"properties": {
+						"topic": { "type": "string" }
+					}
+				}
+			},
+			"required": ["name", "arguments"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"name": { "const": "fn_substitute_string_with_regex"},
+				"arguments": {
+					"type": "object",
+					"properties": {
+						"source_string": { "type": "string" },
+						"regex": { "type": "string" },
+						"replacement": { "type": "string" }
+					}
+				}
+			},
+			"required": ["name", "arguments"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"name": { "const": "fn_write_to_file"},
+				"arguments": {
+					"type": "object",
+					"properties": {
+						"file_path": { "type": "string" },
+						"content": { "type": "string" },
+						"append": { "type": "boolean" }
+					}
+				}
+			},
+			"required": ["name", "arguments"]
+		}
+	]
+}

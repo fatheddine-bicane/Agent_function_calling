@@ -4,4 +4,27 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+	"bs4>=0.0.2",
+	"colorama>=0.4.6",
+	"ddgs>=9.14.1",
+	"interegular>=0.3.3",
+	"jsonschema>=4.26.0",
+	"llm-sdk",
+	"requests>=2.33.1",
+]
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[project.scripts]
+agent = "src.main:main"
+
+[tool.uv.sources]
+llm-sdk = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

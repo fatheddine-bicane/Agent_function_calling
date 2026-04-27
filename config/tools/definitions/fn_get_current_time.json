@@ -1,0 +1,12 @@
+{
+    "name": "fn_get_current_time",
+    "description": "Retrieves the current local time and date for a specific timezone.",
+    "parameters": {
+        "timezone": {
+            "type": "string"
+        }
+    },
+    "return": {
+        "type": "string"
+    }
+}
