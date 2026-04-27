@@ -9,18 +9,27 @@ class ContextWindow:
         self._messages_limit = messages_limit
 
 
-    def appendMessage(self, role: str, content: str) -> None:
-        if (len(self._messages_lists) < self._messages_limit):
-            self._messages_lists.append({
-                "role": role, "content": content
-            })
+    def appendMessage(self, role: str, content: str, name: str | None = None) -> None:
+        # 1. Build the base dictionary
+        message_dict = {"role": role, "content": content}
 
+        # 2. Inject the name key strictly for tool executions
+        if name is not None:
+            message_dict["name"] = name
+
+        # 3. Context Window Management (Sliding Window)
+        if len(self._messages_lists) < self._messages_limit:
+            self._messages_lists.append(message_dict)
         else:
-            if self._index == self._messages_limit:
-                self._index = 0
+            self._messages_lists.append(message_dict)
 
-            self._messages_lists[self._index] = {"role": role, "content": content}
-            self._index += 1
+            cut_index: int = 2
+            for i in range(1, len(self._messages_lists)):
+                if self._messages_lists[i]["role"] == "user":
+                    cut_index = i
+                    break
+
+            self._messages_lists = self._messages_lists[cut_index:]
 
 
     def tokenizeContextWindow(self, llm: Small_LLM_Model) -> list[int]:

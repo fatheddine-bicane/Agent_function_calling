@@ -5,7 +5,7 @@ from src.Constrained_decoding.FiniteStateMachine import FiniteStateMachine
 from interegular.fsm import State
 import re
 import json
-from src.Constrained_decoding.tools import tools
+from config.tools.tools_map import tools_map
 from typing import Any
 from colorama import Style
 
@@ -33,15 +33,15 @@ def buildArrayOfDict(tools: str) -> list[dict]:
     return tools_dict_list
 
 
-def executeFunctions(tools_dict_list: list[dict]) -> list[Any]:
+def executeFunctions(tools_dict_list: list[dict]) -> list[tuple[str, Any]]:
     """
     Loop through the given list of dictionarys executing the functions
     and return the results.
     """
     functions_results: list[Any] = []
     for tool in tools_dict_list:
-        result: Any = tools[tool["name"]](**tool["arguments"])
-        functions_results.append(result)
+        result: Any = tools_map[tool["name"]](**tool["arguments"])
+        functions_results.append((tool["name"], result))
 
     return functions_results
 
@@ -167,8 +167,8 @@ def generateAnswerAndUpdateContextWindow(
 
             # execute the tools and add the result to the history
             results: list[Any] = executeFunctions(tools_list)
-            for result in results:
-                context_window.appendMessage(role="tool", content=str(result))
+            for name, result in results:
+                context_window.appendMessage(role="tool", name=name, content=str(result))
 
             # tokenize the new context window
             tokens_ids = context_window.tokenizeContextWindow(llm)
