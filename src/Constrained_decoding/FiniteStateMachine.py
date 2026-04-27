@@ -43,6 +43,12 @@ class FiniteStateMachine:
         elif schema_type == "number":
             return r'-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?'
 
+        elif schema_type == "boolean":
+            return r'(true|false)'
+
+        elif schema_type == "null":
+            return r'(null)'
+
         elif schema_type == "object":
             properties: dict = schema.get("properties", {})
 
