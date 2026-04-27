@@ -8,7 +8,7 @@ from colorama import Fore
 
 
 def loadFunctions() -> list[dict]:
-    folder_path = Path("src/Functions_deffinition")
+    folder_path = Path("./config/tools/definitions")
 
     lowercase_json = folder_path.glob("*.json")
     uppercase_json = folder_path.glob("*.JSON")

@@ -1,0 +1,12 @@
+{
+    "name": "fn_extract_webpage_content",
+    "description": "Downloads and extracts the main text body from a provided URL, stripping away HTML tags and navigation elements.",
+    "parameters": {
+        "url": {
+            "type": "string"
+        }
+    },
+    "return": {
+        "type": "string"
+    }
+}

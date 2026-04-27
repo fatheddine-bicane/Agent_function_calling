@@ -7,7 +7,7 @@ from typing import Any, Union
 
 class FiniteStateMachine:
     def __init__(self, llm: Small_LLM_Model) -> None:
-        with open("./src/Constrained_decoding/fsm_schema.json") as f:
+        with open("./config/tools/fsm_schema.json") as f:
             schema: dict = json.load(f)
             regex: str = self.__schemaToRegex(schema)
             parsed_regex: Pattern = parse_pattern(regex)

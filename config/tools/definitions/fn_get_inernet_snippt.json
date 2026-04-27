@@ -1,0 +1,12 @@
+{
+    "name": "fn_get_internet_snippet",
+    "description": "Searches the internet for a given topic and returns a text snippet from the top search result.",
+    "parameters": {
+        "topic": {
+            "type": "string"
+        }
+    },
+    "return": {
+        "type": "string"
+    }
+}
